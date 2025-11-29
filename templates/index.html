@@ -160,8 +160,9 @@
                     {% for vlan in vlans %}
                         <tr>
                             <td>
+                                <!-- SIN required para permitir leer VLANs sin completar nada -->
                                 <input type="number" name="vlan_id" min="1" max="4094"
-                                       value="{{ vlan.id }}" required>
+                                       value="{{ vlan.id }}">
                             </td>
                             <td>
                                 <input type="text" name="vlan_name"
@@ -176,7 +177,8 @@
                 {% else %}
                     <tr>
                         <td>
-                            <input type="number" name="vlan_id" min="1" max="4094" required>
+                            <!-- SIN required -->
+                            <input type="number" name="vlan_id" min="1" max="4094">
                         </td>
                         <td>
                             <input type="text" name="vlan_name"
@@ -230,7 +232,7 @@
 
         tr.innerHTML = `
             <td>
-                <input type="number" name="vlan_id" min="1" max="4094" required>
+                <input type="number" name="vlan_id" min="1" max="4094">
             </td>
             <td>
                 <input type="text" name="vlan_name" placeholder="Ej: VLAN_VOZ">
