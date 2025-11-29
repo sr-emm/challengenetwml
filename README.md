@@ -19,6 +19,7 @@ Pasos realizados:
 4. Se compara los frontend que mencionan en el challenge. Parece que lo mas simple seria flask por ser web
 
 ========================================================================================================
+
 Manos a la obra:
 1. La IA establece instrucciones para trabajar con flask y concentrarse en un paso a la vez. 
 2. Se levanto un ambiente virtual de python en la pc windows, ya tenia Python instalado por lo que fue medio directo.
