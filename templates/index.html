@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Configuración de VLANs - Switch Cisco</title>
+    <title>Configuración de VLANs - Cisco</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -10,7 +10,7 @@
             color: #eee;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 40px auto;
             background: #2b2b2b;
             padding: 20px 30px;
@@ -39,7 +39,8 @@
             background: #444;
         }
         input[type="number"],
-        input[type="text"] {
+        input[type="text"],
+        input[type="password"] {
             width: 95%;
             padding: 6px;
             border-radius: 4px;
@@ -71,15 +72,74 @@
             padding: 15px;
             background: #333;
             border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: "Consolas", monospace;
+            font-size: 13px;
+        }
+        .alert-error {
+            background: #661515;
+            color: #ffd0d0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .alert-ok {
+            background: #155724;
+            color: #d4edda;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .section-title {
+            margin-top: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #555;
+            padding-bottom: 4px;
         }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Configuración de VLANs</h1>
-    <p>Agregá, editá o borrá VLANs y volvé a enviar el formulario.</p>
+    <p>Conectate al dispositivo (GNS3 / físico / lab), definí las VLANs y aplicalas desde esta interfaz.</p>
 
     <form method="post" id="vlanForm">
+        <div class="section-title">Datos de conexión al dispositivo</div>
+        <table>
+            <tr>
+                <td>IP del dispositivo</td>
+                <td>
+                    <input type="text" name="device_ip"
+                           placeholder="Ej: 10.20.20.1"
+                           value="{{ device_ip or '' }}" required>
+                </td>
+            </tr>
+            <tr>
+                <td>Usuario</td>
+                <td>
+                    <input type="text" name="username"
+                           placeholder="Ej: admin"
+                           value="{{ username or '' }}" required>
+                </td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td>
+                    <input type="password" name="password"
+                           placeholder="Password" required>
+                </td>
+            </tr>
+            <tr>
+                <td>Puerto Telnet/SSH</td>
+                <td>
+                    <input type="number" name="port"
+                           placeholder="Ej: 23"
+                           value="{{ port or 23 }}">
+                </td>
+            </tr>
+        </table>
+
+        <div class="section-title">VLANs</div>
         <table>
             <thead>
                 <tr>
@@ -90,7 +150,6 @@
             </thead>
             <tbody id="vlanRows">
                 {% if vlans and vlans|length > 0 %}
-                    <!-- Si ya hay VLANs, las mostramos en filas editables -->
                     {% for vlan in vlans %}
                         <tr>
                             <td>
@@ -99,7 +158,8 @@
                             </td>
                             <td>
                                 <input type="text" name="vlan_name"
-                                       value="{{ vlan.name }}" placeholder="Ej: VLAN_DATOS">
+                                       value="{{ vlan.name }}"
+                                       placeholder="Ej: VLAN_DATOS">
                             </td>
                             <td>
                                 <button type="button" class="btn btn-secondary" onclick="deleteRow(this)">Borrar</button>
@@ -107,13 +167,13 @@
                         </tr>
                     {% endfor %}
                 {% else %}
-                    <!-- Fila inicial vacía si todavía no se envió nada -->
                     <tr>
                         <td>
                             <input type="number" name="vlan_id" min="1" max="4094" required>
                         </td>
                         <td>
-                            <input type="text" name="vlan_name" placeholder="Ej: VLAN_DATOS">
+                            <input type="text" name="vlan_name"
+                                   placeholder="Ej: VLAN_DATOS">
                         </td>
                         <td>
                             <button type="button" class="btn btn-secondary" onclick="deleteRow(this)">Borrar</button>
@@ -124,29 +184,31 @@
         </table>
 
         <button type="button" class="btn" onclick="addRow()">Agregar VLAN</button>
-        <button type="submit" class="btn">Guardar / Actualizar</button>
+        <button type="submit" class="btn">Aplicar en el dispositivo</button>
     </form>
+
+    {% if error_msg %}
+        <div class="alert-error">{{ error_msg }}</div>
+    {% endif %}
+
+    {% if success_msg %}
+        <div class="alert-ok">{{ success_msg }}</div>
+    {% endif %}
+
+    {% if netmiko_output %}
+        <div class="result">
+            <strong>Output de Netmiko:</strong>
+            <br><br>
+            {{ netmiko_output }}
+        </div>
+    {% endif %}
 
     {% if vlans and vlans|length > 0 %}
         <div class="result">
-            <h2>Resumen actual</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>VLAN ID</th>
-                        <th>Nombre</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for vlan in vlans %}
-                    <tr>
-                        <td>{{ vlan.id }}</td>
-                        <td>{{ vlan.name }}</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            <p>Este es el último estado enviado. Podés seguir editando arriba y volver a guardar.</p>
+            <strong>Resumen de VLANs:</strong><br>
+            {% for vlan in vlans %}
+                VLAN {{ vlan.id }} - {{ vlan.name }}<br>
+            {% endfor %}
         </div>
     {% endif %}
 </div>

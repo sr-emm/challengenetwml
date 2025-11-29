@@ -38,4 +38,5 @@ Manos a la obra:
 <img width="951" height="827" alt="image" src="https://github.com/user-attachments/assets/d41b81d6-64c1-4f74-8925-c263e2840b6b" />
 <img width="351" height="116" alt="image" src="https://github.com/user-attachments/assets/bffee0c4-de05-4a3c-a30e-27a479c6c92b" />
 
-10. 
+10. Se agregan los archivos al github para tener control de cambios. Se empieza a instalar y configurar netmiko.
+11. Se configura en GNS3 un switch IOU L2 para poder establecer las pruebas. Esto hace que deba agregar el puerto para que se conecte al telnet del equipo. 
