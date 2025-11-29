@@ -7,34 +7,44 @@ from netmiko import (
 import re
 
 app = Flask(__name__)
-IGNORE_VLANS = {"1002", "1003", "1004", "1005"}
 
-# SOLO LAB – en algo real, esto debería ir en una variable de entorno
+# SOLO LAB – en algo real, usá una env var
 app.secret_key = "cambia-esta-clave-para-tu-lab"
 
+# VLANs legacy que no queremos ver ni tocar
+IGNORE_VLANS = {"1002", "1003", "1004", "1005"}
 
-def apply_vlan_config(vlans, device_ip, username, password, port, device_type="cisco_ios_telnet"):
+
+def apply_config(vlans, hostname, device_ip, username, password, port, device_type="cisco_ios_telnet"):
     """
-    Aplica configuración de VLANs en el dispositivo Cisco.
+    Aplica configuración de VLANs y hostname en el dispositivo Cisco.
     """
     device = {
         "device_type": device_type,  # "cisco_ios" si usás SSH
         "host": device_ip,
         "username": username,
         "password": password,
-        "secret": password,   # si el enable es distinto, cambiá esto
+        "secret": password,  # si el enable es otro, cambialo
         "port": port,
     }
 
     commands = []
+
+    # Cambiar nombre del switch si se indicó
+    if hostname:
+        commands.append(f"hostname {hostname}")
+
+    # Config de VLANs
     for vlan in vlans:
         vlan_id = vlan["id"]
         vlan_name = vlan["name"]
-
         commands.extend([
             f"vlan {vlan_id}",
             f"name {vlan_name}",
         ])
+
+    if not commands:
+        return False, "No hay cambios para aplicar (sin hostname ni VLANs)."
 
     try:
         conn = ConnectHandler(**device)
@@ -47,11 +57,7 @@ def apply_vlan_config(vlans, device_ip, username, password, port, device_type="c
 
         output = conn.send_config_set(commands)
 
-        try:
-            output += "\n" + conn.save_config()
-        except Exception:
-            output += "\n(No se pudo ejecutar save_config automáticamente)"
-
+        # NO guardamos obligatoriamente acá; hay un botón dedicado
         conn.disconnect()
         return True, output
 
@@ -65,7 +71,7 @@ def apply_vlan_config(vlans, device_ip, username, password, port, device_type="c
 
 def fetch_current_vlans(device_ip, username, password, port, device_type="cisco_ios_telnet"):
     """
-    Ejecuta 'show vlan brief' y devuelve una lista de VLANs parseadas.
+    Ejecuta 'show vlan brief' y devuelve una lista de VLANs parseadas (sin 1002–1005).
     """
     device = {
         "device_type": device_type,
@@ -101,7 +107,7 @@ def fetch_current_vlans(device_ip, username, password, port, device_type="cisco_
 def parse_vlans_from_show(output):
     """
     Parseo simple de 'show vlan brief'.
-    Ignora las VLANs 1002-1005 (FDDI/TokenRing).
+    Ignora las VLANs 1002–1005 (FDDI/TokenRing).
     """
     vlans = []
     for line in output.splitlines():
@@ -121,7 +127,6 @@ def parse_vlans_from_show(output):
         if not vlan_id.isdigit():
             continue
 
-        # Ignorar VLANs legacy 1002-1005
         if vlan_id in IGNORE_VLANS:
             continue
 
@@ -130,59 +135,150 @@ def parse_vlans_from_show(output):
     return vlans
 
 
+def fetch_hostname(device_ip, username, password, port, device_type="cisco_ios_telnet"):
+    """
+    Lee el hostname actual del dispositivo (show run | i ^hostname).
+    """
+    device = {
+        "device_type": device_type,
+        "host": device_ip,
+        "username": username,
+        "password": password,
+        "secret": password,
+        "port": port,
+    }
+
+    try:
+        conn = ConnectHandler(**device)
+
+        try:
+            conn.enable()
+        except Exception:
+            pass
+
+        output = conn.send_command("show running-config | include ^hostname")
+        conn.disconnect()
+
+        hostname = parse_hostname_from_output(output)
+        return True, hostname, output
+
+    except NetmikoAuthenticationException as e:
+        return False, "", f"Error de autenticación: {e}"
+    except NetmikoTimeoutException as e:
+        return False, "", f"Timeout conectando al dispositivo: {e}"
+    except Exception as e:
+        return False, "", f"Error inesperado: {e}"
+
+
+def parse_hostname_from_output(output):
+    """
+    Busca una línea 'hostname X' y devuelve X.
+    """
+    for line in output.splitlines():
+        line = line.strip()
+        if line.startswith("hostname "):
+            parts = line.split()
+            if len(parts) >= 2:
+                return parts[1]
+    return ""
+
+
+def save_config_only(device_ip, username, password, port, device_type="cisco_ios_telnet"):
+    """
+    Solo ejecuta 'write memory' / 'copy run start' vía Netmiko (save_config()).
+    """
+    device = {
+        "device_type": device_type,
+        "host": device_ip,
+        "username": username,
+        "password": password,
+        "secret": password,
+        "port": port,
+    }
+
+    try:
+        conn = ConnectHandler(**device)
+
+        try:
+            conn.enable()
+        except Exception:
+            pass
+
+        try:
+            output = conn.save_config()
+        except Exception:
+            # Algunos IOS no soportan save_config directo
+            output = "No se pudo ejecutar save_config automáticamente (probá manualmente 'write memory')."
+
+        conn.disconnect()
+        return True, output
+
+    except NetmikoAuthenticationException as e:
+        return False, f"Error de autenticación: {e}"
+    except NetmikoTimeoutException as e:
+        return False, f"Timeout conectando al dispositivo: {e}"
+    except Exception as e:
+        return False, f"Error inesperado: {e}"
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
-    # Valores iniciales desde sesión (para no reescribir todo cada vez)
+    # Valores iniciales desde sesión
     device_ip = session.get("device_ip", "")
     username = session.get("username", "")
     stored_password = session.get("device_password", "")
     port = session.get("port", 23)
+    hostname = session.get("hostname", "")
 
     vlans = []
     error_msg = None
     success_msg = None
     netmiko_output = None
 
-    password = ""          # lo que llega del form
-    password_for_field = ""  # lo que vamos a mostrar en el input (última usada)
+    password = ""
+    password_for_field = stored_password
 
     if request.method == "POST":
-        action = request.form.get("action", "apply")  # "apply" o "fetch"
+        action = request.form.get("action", "apply")  # apply, fetch_vlans, fetch_hostname, save_config
 
-        # Datos de conexión (si el form trae algo, pisa lo de sesión)
+        # Datos de conexión
         form_ip = request.form.get("device_ip", "").strip()
         form_user = request.form.get("username", "").strip()
         form_pass = request.form.get("password", "")
         form_port = request.form.get("port", "").strip()
+        form_hostname = request.form.get("hostname", "").strip()
 
         if form_ip:
             device_ip = form_ip
         if form_user:
             username = form_user
-
         if form_port:
             try:
                 port = int(form_port)
             except ValueError:
                 port = 23
 
-        # Password: si el usuario escribe una, se actualiza;
-        # si la deja vacía, usamos la que está guardada en sesión
+        # hostname desde form (si escribió algo, pisa lo anterior)
+        if form_hostname:
+            hostname = form_hostname
+
+        # Password: si la escribe, actualiza; si no, uso la guardada
         if form_pass:
             password = form_pass
         else:
             password = stored_password
 
-        # Guardar en sesión para próximas veces
+        # Guardar en sesión
         session["device_ip"] = device_ip
         session["username"] = username
         session["port"] = port
+        session["hostname"] = hostname
         if password:
             session["device_password"] = password
 
-        password_for_field = password  # esto rellena el input password
+        password_for_field = password
 
-        # VLANs del form (para acción "apply"; para "fetch" se sobrescriben)
+        # VLANs desde formulario (para aplicar; para fetch_vlans se sobrescriben)
         vlan_ids = request.form.getlist("vlan_id")
         vlan_names = request.form.getlist("vlan_name")
 
@@ -192,11 +288,8 @@ def index():
 
             if not vid:
                 continue
-
-            # Ignorar VLANs 1002–1005 aunque el usuario las ingrese
             if vid in IGNORE_VLANS:
                 continue
-
             if not vname:
                 vname = f"VLAN_{vid}"
 
@@ -205,8 +298,7 @@ def index():
         if not device_ip or not username or not password:
             error_msg = "Faltan datos de conexión (IP, usuario o password)."
         else:
-            if action == "fetch":
-                # Leer VLANs actuales del equipo
+            if action == "fetch_vlans":
                 ok, vlans_from_device, output = fetch_current_vlans(
                     device_ip=device_ip,
                     username=username,
@@ -221,26 +313,54 @@ def index():
                 else:
                     error_msg = output
 
-            else:  # action == "apply"
-                if len(vlans) == 0:
-                    error_msg = "No se cargó ninguna VLAN válida."
+            elif action == "fetch_hostname":
+                ok, hostname_from_device, output = fetch_hostname(
+                    device_ip=device_ip,
+                    username=username,
+                    password=password,
+                    port=port,
+                    device_type="cisco_ios_telnet",
+                )
+                if ok:
+                    hostname = hostname_from_device or hostname
+                    session["hostname"] = hostname
+                    success_msg = "Nombre del switch leído correctamente."
+                    netmiko_output = output
                 else:
-                    ok, output = apply_vlan_config(
+                    error_msg = output
+
+            elif action == "save_config":
+                ok, output = save_config_only(
+                    device_ip=device_ip,
+                    username=username,
+                    password=password,
+                    port=port,
+                    device_type="cisco_ios_telnet",
+                )
+                if ok:
+                    success_msg = "Configuración guardada en el dispositivo."
+                    netmiko_output = output
+                else:
+                    error_msg = output
+
+            else:  # apply
+                if len(vlans) == 0 and not hostname:
+                    error_msg = "No hay cambios para aplicar (ni VLANs ni hostname)."
+                else:
+                    ok, output = apply_config(
                         vlans=vlans,
+                        hostname=hostname,
                         device_ip=device_ip,
                         username=username,
                         password=password,
                         port=port,
-                        device_type="cisco_ios_telnet",  # "cisco_ios" si usás SSH
+                        device_type="cisco_ios_telnet",
                     )
                     if ok:
-                        success_msg = "Configuración de VLANs aplicada correctamente."
+                        success_msg = "Configuración aplicada correctamente (VLANs/hostname)."
                         netmiko_output = output
                     else:
                         error_msg = output
-    else:
-        # GET: mostrar última password usada (si existe)
-        password_for_field = stored_password
 
     return render_template(
         "index.html",
@@ -248,6 +368,7 @@ def index():
         device_ip=device_ip,
         username=username,
         port=port,
+        hostname=hostname,
         password_value=password_for_field,
         error_msg=error_msg,
         success_msg=success_msg,
