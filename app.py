@@ -512,8 +512,10 @@ def index():
         # ---------------------------------------------------------------------
         # Validación básica de conexión
         # ---------------------------------------------------------------------
-        if not device_ip or not username or not password:
-            error_msg = "Faltan datos de conexión (IP, usuario o password)."
+        # Validación real de IP en backend
+        ip_regex = r"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+        if not re.match(ip_regex, device_ip):
+            error_msg = "La IP del dispositivo no es válida."
         else:
             # -----------------------------------------------------------------
             # Acción: Leer VLANs + hostname (fetch_all)

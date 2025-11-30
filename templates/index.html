@@ -188,9 +188,12 @@
             <tr>
                 <td>IP del dispositivo</td>
                 <td>
-                    <input type="text" name="device_ip"
-                           placeholder="Ej: 10.20.20.1"
-                           value="{{ device_ip or '' }}" required>
+					<input type="text" name="device_ip"
+						   placeholder="Ej: 10.20.20.1"
+						   value="{{ device_ip or '' }}"
+						   pattern="^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+						   title="Debe ser una dirección IPv4 válida. Ej: 192.168.1.10"
+						   required>
                 </td>
             </tr>
 
