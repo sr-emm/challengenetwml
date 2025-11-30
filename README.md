@@ -42,25 +42,28 @@ Fase 1:
     6.1 Descargable
       Se creo la posibilidad de descargar el archivo con el boton correspondiente. El archivo incluye un formato que esta perfectamente diseñado para guardar multiples teniendo un control claro de cual es el mas reciente: año-mes-dia-horaminutos-hostname.txt
       <img width="465" height="69" alt="image" src="https://github.com/user-attachments/assets/58eb6a7d-9161-49af-9742-6b650e5dac57" />
-      Se adjunta este archivo en el repositorio
+ 
+     Se adjunta este archivo en el repositorio
     6.2 TFTP
       Se utiliza el mismo nombre que en el descargable pero se debe colocar la IP en el campo que se destina para eso:
       <img width="961" height="139" alt="image" src="https://github.com/user-attachments/assets/8c7c5113-0ece-403d-b92f-d0c8d644d13c" />
       <img width="992" height="304" alt="image" src="https://github.com/user-attachments/assets/93a9a8fa-c1d6-4781-8323-f3af4fbaddf1" />
-      Hubo que colocar un pequeño delay para que funcionara esta funcion. 
+ 
+     Hubo que colocar un pequeño delay para que funcionara esta funcion. 
 
-  7. Validacion de configuracion
+  8. Validacion de configuracion
     En cada paso de la configuracion se muestra la salida exacta de la consola, esto hace que si hay un error se pueda visualizar. Al la configuracion siempre sobreescribirse al aplicar cambios, no veo como podria coincidir. Esto podria pasar si se da una etpaa de evaluacion de que esta vs lo que se quiere configurar y aceptar o negar los cambios segun se decida. 
   
-  8. Control de Versiones
+  9. Control de Versiones
     Se sube la mayor cantidad de informacion posible para ir documentando todo el proceso y tener facil algun rollback de ser necesario.   
-  9. README
+  10. README
 
 INSTALACION
 Para instala:
 1. Se debe coocar todos los archivos en un carpeta.
 2. Se debe instalar python y setear un enviroment. En mi caso genere el siguiente
 <img width="445" height="33" alt="image" src="https://github.com/user-attachments/assets/47168e3a-2c81-4023-922c-602dc75f4f65" /> 
+ 
 3. Dentro del Enviroment: instalar Flask para el Frontend:  pip install Flask
 <img width="485" height="30" alt="image" src="https://github.com/user-attachments/assets/764a66c4-ea44-4d24-9881-3ae847ea7109" /> 
  
