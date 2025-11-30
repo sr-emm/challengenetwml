@@ -16,9 +16,18 @@ app.secret_key = "cambia-esta-clave-para-tu-lab"
 IGNORE_VLANS = {"1002", "1003", "1004", "1005"}
 
 
-def build_device(device_ip, username, password, port, device_type="cisco_ios_telnet"):
+def build_device(device_ip, username, password, port, protocol):
+    """
+    Arma el diccionario de conexión para Netmiko según el protocolo.
+    protocol: "telnet" o "ssh"
+    """
+    if protocol == "ssh":
+        device_type = "cisco_ios"
+    else:
+        device_type = "cisco_ios_telnet"
+
     return {
-        "device_type": device_type,  # "cisco_ios" si usás SSH
+        "device_type": device_type,
         "host": device_ip,
         "username": username,
         "password": password,
@@ -27,11 +36,11 @@ def build_device(device_ip, username, password, port, device_type="cisco_ios_tel
     }
 
 
-def apply_config(vlans, hostname, device_ip, username, password, port, device_type="cisco_ios_telnet"):
+def apply_config(vlans, hostname, device_ip, username, password, port, protocol):
     """
     Aplica configuración de VLANs y hostname en el dispositivo Cisco.
     """
-    device = build_device(device_ip, username, password, port, device_type)
+    device = build_device(device_ip, username, password, port, protocol)
 
     commands = []
 
@@ -74,11 +83,11 @@ def apply_config(vlans, hostname, device_ip, username, password, port, device_ty
         return False, f"Error inesperado: {e}"
 
 
-def fetch_current_vlans(device_ip, username, password, port, device_type="cisco_ios_telnet"):
+def fetch_current_vlans(device_ip, username, password, port, protocol):
     """
     Ejecuta 'show vlan brief' y devuelve una lista de VLANs parseadas (sin 1002–1005).
     """
-    device = build_device(device_ip, username, password, port, device_type)
+    device = build_device(device_ip, username, password, port, protocol)
 
     try:
         conn = ConnectHandler(**device)
@@ -133,11 +142,11 @@ def parse_vlans_from_show(output):
     return vlans
 
 
-def fetch_hostname(device_ip, username, password, port, device_type="cisco_ios_telnet"):
+def fetch_hostname(device_ip, username, password, port, protocol):
     """
     Lee el hostname actual del dispositivo (show run | i ^hostname).
     """
-    device = build_device(device_ip, username, password, port, device_type)
+    device = build_device(device_ip, username, password, port, protocol)
 
     try:
         conn = ConnectHandler(**device)
@@ -174,11 +183,11 @@ def parse_hostname_from_output(output):
     return ""
 
 
-def save_config_only(device_ip, username, password, port, device_type="cisco_ios_telnet"):
+def save_config_only(device_ip, username, password, port, protocol):
     """
     Solo ejecuta 'write memory' / 'copy run start' vía Netmiko (save_config()).
     """
-    device = build_device(device_ip, username, password, port, device_type)
+    device = build_device(device_ip, username, password, port, protocol)
 
     try:
         conn = ConnectHandler(**device)
@@ -204,11 +213,11 @@ def save_config_only(device_ip, username, password, port, device_type="cisco_ios
         return False, f"Error inesperado: {e}"
 
 
-def fetch_full_config(device_ip, username, password, port, device_type="cisco_ios_telnet"):
+def fetch_full_config(device_ip, username, password, port, protocol):
     """
     Obtiene la running-config completa (show running-config).
     """
-    device = build_device(device_ip, username, password, port, device_type)
+    device = build_device(device_ip, username, password, port, protocol)
 
     try:
         conn = ConnectHandler(**device)
@@ -238,6 +247,7 @@ def index():
     stored_password = session.get("device_password", "")
     port = session.get("port", 23)
     hostname = session.get("hostname", "")
+    protocol = session.get("protocol", "telnet")  # telnet / ssh
 
     vlans = []
     error_msg = None
@@ -258,16 +268,25 @@ def index():
         form_pass = request.form.get("password", "")
         form_port = request.form.get("port", "").strip()
         form_hostname = request.form.get("hostname", "").strip()
+        form_protocol = request.form.get("protocol", "").strip().lower()
 
         if form_ip:
             device_ip = form_ip
         if form_user:
             username = form_user
+
+        # protocolo: telnet o ssh
+        if form_protocol in ("telnet", "ssh"):
+            protocol = form_protocol
+
+        # puerto: si no se indica, por defecto 23 para telnet, 22 para ssh
         if form_port:
             try:
                 port = int(form_port)
             except ValueError:
-                port = 23
+                port = 23 if protocol == "telnet" else 22
+        else:
+            port = 23 if protocol == "telnet" else 22
 
         # hostname desde form
         if form_hostname:
@@ -284,6 +303,7 @@ def index():
         session["username"] = username
         session["port"] = port
         session["hostname"] = hostname
+        session["protocol"] = protocol
         if password:
             session["device_password"] = password
 
@@ -316,14 +336,14 @@ def index():
                     username=username,
                     password=password,
                     port=port,
-                    device_type="cisco_ios_telnet",
+                    protocol=protocol,
                 )
                 ok_host, hostname_from_device, out_host = fetch_hostname(
                     device_ip=device_ip,
                     username=username,
                     password=password,
                     port=port,
-                    device_type="cisco_ios_telnet",
+                    protocol=protocol,
                 )
 
                 msgs_ok = []
@@ -361,7 +381,7 @@ def index():
                     username=username,
                     password=password,
                     port=port,
-                    device_type="cisco_ios_telnet",
+                    protocol=protocol,
                 )
                 if ok:
                     success_msg = "Configuración guardada en el dispositivo."
@@ -375,7 +395,7 @@ def index():
                     username=username,
                     password=password,
                     port=port,
-                    device_type="cisco_ios_telnet",
+                    protocol=protocol,
                 )
                 if not ok:
                     error_msg = cfg_output
@@ -383,6 +403,7 @@ def index():
                     # Determinar hostname para el nombre del archivo
                     hn = hostname or parse_hostname_from_output(cfg_output) or "device"
                     now = datetime.now()
+                    # Año-Mes-Dia-horaMinuto-Nombredelequipo.txt (sin guion entre hora y minuto)
                     filename = f"{now.year:04d}-{now.month:02d}-{now.day:02d}-{now.hour:02d}{now.minute:02d}-{hn}.txt"
 
                     response = make_response(cfg_output)
@@ -401,7 +422,7 @@ def index():
                         username=username,
                         password=password,
                         port=port,
-                        device_type="cisco_ios_telnet",
+                        protocol=protocol,
                     )
                     if ok:
                         success_msg = "Configuración aplicada correctamente (VLANs/hostname)."
@@ -416,6 +437,7 @@ def index():
         username=username,
         port=port,
         hostname=hostname,
+        protocol=protocol,
         password_value=password_for_field,
         error_msg=error_msg,
         success_msg=success_msg,

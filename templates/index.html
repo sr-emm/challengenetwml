@@ -49,14 +49,33 @@
         }
         input[type="number"],
         input[type="text"],
-        input[type="password"] {
-            width: 95%;
+        input[type="password"],
+        select {
             padding: 6px;
             border-radius: 4px;
             border: 1px solid #555;
             background: #111;
             color: #eee;
         }
+        input[type="number"],
+        input[type="text"],
+        input[type="password"] {
+            width: 95%;
+        }
+
+        /* Protocolo + Puerto */
+        .port-proto-wrapper {
+            display: inline-flex;   /* inline para que el <td> centrado lo alinee */
+            gap: 8px;
+            align-items: center;
+            width: 95%;
+        }
+        .port-proto-wrapper input[type="number"],
+        .port-proto-wrapper select {
+            flex: 1 1 0;
+            width: 100%;
+        }
+
         .btn {
             margin-top: 15px;
             padding: 10px 16px;
@@ -150,11 +169,19 @@
                 </td>
             </tr>
             <tr>
-                <td>Puerto Telnet/SSH</td>
+                <td>Protocolo y Puerto</td>
                 <td>
-                    <input type="number" name="port"
-                           placeholder="Ej: 23"
-                           value="{{ port or 23 }}">
+                    <div class="port-proto-wrapper">
+                        <!-- Primero protocolo -->
+                        <select name="protocol">
+                            <option value="telnet" {% if protocol == 'telnet' %}selected{% endif %}>Telnet</option>
+                            <option value="ssh" {% if protocol == 'ssh' %}selected{% endif %}>SSH</option>
+                        </select>
+                        <!-- Luego puerto -->
+                        <input type="number" name="port"
+                               placeholder="Ej: 23"
+                               value="{{ port or 23 }}">
+                    </div>
                 </td>
             </tr>
             <tr>
