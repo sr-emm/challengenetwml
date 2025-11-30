@@ -383,7 +383,7 @@ def index():
                     # Determinar hostname para el nombre del archivo
                     hn = hostname or parse_hostname_from_output(cfg_output) or "device"
                     now = datetime.now()
-                    filename = f"{now.year:04d}-{now.month:02d}-{now.day:02d}-{now.hour:02d}-{now.minute:02d}-{hn}.txt"
+                    filename = f"{now.year:04d}-{now.month:02d}-{now.day:02d}-{now.hour:02d}{now.minute:02d}-{hn}.txt"
 
                     response = make_response(cfg_output)
                     response.headers["Content-Type"] = "text/plain"
