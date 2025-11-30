@@ -8,151 +8,176 @@
         Estilos básicos sin frameworks.
         Todo el contenido vive dentro de .container centrado y con fondo oscuro.
     -->
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #1e1e1e;
-            color: #eee;
-        }
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            background: #2b2b2b;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px #000;
-        }
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #1e1e1e;
+			color: #eee;
+		}
+		.container {
+			max-width: 900px;
+			margin: 40px auto;
+			background: #2b2b2b;
+			padding: 20px 30px;
+			border-radius: 8px;
+			box-shadow: 0 0 10px #000;
+		}
 
-        /* Cabecera: logo + título centrados */
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 10px;
-        }
-        .header img {
-            height: 48px;
-        }
-        h1 {
-            margin: 0;
-        }
+		/* Cabecera: logo + título centrados */
+		.header {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 15px;
+			margin-bottom: 10px;
+		}
+		.header img {
+			height: 48px;
+		}
+		h1 {
+			margin: 0;
+		}
 
-        p {
-            font-size: 14px;
-            color: #ccc;
-        }
+		p {
+			font-size: 14px;
+			color: #ccc;
+		}
 
-        /* Tablas para alinear etiquetas y campos */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            border: 1px solid #555;
-            padding: 8px;
-            text-align: center;
-        }
-        th {
-            background: #444;
-        }
+		/* Tablas para alinear etiquetas y campos */
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-top: 15px;
+		}
+		th, td {
+			border: 1px solid #555;
+			padding: 8px;
+			text-align: center;
+		}
+		th {
+			background: #444;
+		}
 
-        /* Inputs / selects con look oscuro */
-        input[type="number"],
-        input[type="text"],
-        input[type="password"],
-        select {
-            padding: 6px;
-            border-radius: 4px;
-            border: 1px solid #555;
-            background: #111;
-            color: #eee;
-        }
-        /* Que ocupen casi todo el ancho de la celda */
-        input[type="number"],
-        input[type="text"],
-        input[type="password"] {
-            width: 95%;
-        }
+		/* Inputs / selects con look oscuro */
+		input[type="number"],
+		input[type="text"],
+		input[type="password"],
+		select {
+			padding: 6px;
+			border-radius: 4px;
+			border: 1px solid #555;
+			background: #111;
+			color: #eee;
+		}
+		/* Que ocupen casi todo el ancho de la celda */
+		input[type="number"],
+		input[type="text"],
+		input[type="password"] {
+			width: 95%;
+		}
 
-        /* Wrapper horizontal para "Protocolo y Puerto" (select + input number) */
-        .port-proto-wrapper {
-            display: inline-flex;   /* inline para que el <td> centrado lo alinee */
-            gap: 8px;
-            align-items: center;
-            width: 95%;
-        }
-        .port-proto-wrapper input[type="number"],
-        .port-proto-wrapper select {
-            flex: 1 1 0;           /* reparte el ancho entre ambos */
-            width: 100%;
-        }
+		/* Wrapper horizontal para "Protocolo y Puerto" (select + input number) */
+		.port-proto-wrapper {
+			display: inline-flex;   /* inline para que el <td> centrado lo alinee */
+			gap: 8px;
+			align-items: center;
+			width: 95%;
+		}
+		.port-proto-wrapper input[type="number"],
+		.port-proto-wrapper select {
+			flex: 1 1 0;           /* reparte el ancho entre ambos */
+			width: 100%;
+		}
 
-        /* Botones principales */
-        .btn {
-            margin-top: 15px;
-            padding: 10px 16px;
-            border: none;
-            border-radius: 4px;
-            background: #007bff;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        .btn:hover {
-            background: #0069d9;
-        }
-        .btn-secondary {
-            background: #6c757d;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
+		/* Botones principales */
+		.btn {
+			margin-top: 15px;
+			padding: 10px 16px;
+			border: none;
+			border-radius: 4px;
+			background: #007bff;
+			color: white;
+			font-size: 14px;
+			cursor: pointer;
+		}
+		.btn:hover {
+			background: #0069d9;
+		}
+		.btn-secondary {
+			background: #6c757d;
+		}
+		.btn-secondary:hover {
+			background: #5a6268;
+		}
 
-        /* Panel de resultados / logs */
-        .result {
-            margin-top: 30px;
-            padding: 15px;
-            background: #333;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            font-family: "Consolas", monospace;
-            font-size: 13px;
-        }
+		/* Panel de resultados / logs */
+		.result {
+			margin-top: 30px;
+			padding: 15px;
+			background: #333;
+			border-radius: 4px;
+			white-space: pre-wrap;
+			font-family: "Consolas", monospace;
+			font-size: 13px;
+		}
 
-        /* Mensajes de error / éxito */
-        .alert-error {
-            background: #661515;
-            color: #ffd0d0;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-        .alert-ok {
-            background: #155724;
-            color: #d4edda;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
+		/* Mensajes de error / éxito */
+		.alert-error {
+			background: #661515;
+			color: #ffd0d0;
+			padding: 10px;
+			border-radius: 4px;
+			margin-top: 15px;
+		}
+		.alert-ok {
+			background: #155724;
+			color: #d4edda;
+			padding: 10px;
+			border-radius: 4px;
+			margin-top: 15px;
+		}
 
-        /* Títulos de secciones (línea divisoria gris) */
-        .section-title {
-            margin-top: 20px;
-            font-weight: bold;
-            border-bottom: 1px solid #555;
-            padding-bottom: 4px;
-        }
+		/* Títulos de secciones (línea divisoria gris) */
+		.section-title {
+			margin-top: 20px;
+			font-weight: bold;
+			border-bottom: 1px solid #555;
+			padding-bottom: 4px;
+		}
 
-        /* Grupos de botones en fila, con wrap para pantallas angostas */
-        .btn-group {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-    </style>
+		/* Grupos de botones en fila, con wrap para pantallas angostas */
+		.btn-group {
+			margin-top: 15px;
+			display: flex;
+			gap: 10px;
+			flex-wrap: wrap;
+		}
+
+		/* ---------- Ajustes específicos de la tabla de VLANs ---------- */
+
+		/* Tabla de VLANs: filas más bajas */
+		.vlan-table th,
+		.vlan-table td {
+			padding: 4px 6px;        /* menos padding que el resto */
+			vertical-align: middle;  /* centra verticalmente el contenido */
+		}
+
+		/* Inputs dentro de la tabla de VLANs: más bajos y compactos */
+		.vlan-table input[type="number"],
+		.vlan-table input[type="text"] {
+			padding: 3px 4px;
+			font-size: 13px;
+			height: 24px;            /* fuerza altura más chica */
+		}
+
+		/* Botón "Borrar" dentro de la tabla de VLANs:
+		   sin margen superior y centrado en su celda */
+		.vlan-table .btn-secondary {
+			margin-top: 0;           /* elimina el margen de .btn */
+			padding: 4px 10px;
+			display: inline-block;
+		}
+	</style>
 </head>
 <body>
 <div class="container">
@@ -289,9 +314,9 @@
                 </td>
             </tr>
         </table>
-
+		
         <!-- Tabla de VLANs del switch -->
-        <table>
+        <table class="vlan-table">
             <thead>
                 <tr>
                     <th>VLAN ID</th>
@@ -316,7 +341,8 @@
                                        maxlength="20">
                             </td>
                             <td>
-                                <button type="button" class="btn btn-secondary" onclick="deleteRow(this)">Borrar</button>
+                                <button type="button" class="btn btn-secondary"
+                                        onclick="deleteRow(this)">Borrar</button>
                             </td>
                         </tr>
                     {% endfor %}
@@ -333,7 +359,8 @@
                                    maxlength="20">
                         </td>
                         <td>
-                            <button type="button" class="btn btn-secondary" onclick="deleteRow(this)">Borrar</button>
+                            <button type="button" class="btn btn-secondary"
+                                    onclick="deleteRow(this)">Borrar</button>
                         </td>
                     </tr>
                 {% endif %}
