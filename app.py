@@ -1,3 +1,4 @@
+import time
 from flask import Flask, render_template, request, session, make_response
 from netmiko import (
     ConnectHandler,
@@ -71,7 +72,6 @@ def apply_config(vlans, hostname, device_ip, username, password, port, protocol)
 
         output = conn.send_config_set(commands)
 
-        # NO guardamos obligatoriamente acá; hay un botón dedicado
         conn.disconnect()
         return True, output
 
@@ -239,6 +239,70 @@ def fetch_full_config(device_ip, username, password, port, protocol):
         return False, f"Error inesperado: {e}"
 
 
+def upload_config_tftp(device_ip, username, password, port, protocol, tftp_ip, hostname):
+    """
+    Ejecuta 'copy running-config tftp:' usando solo la IP TFTP.
+    El nombre del archivo se genera como:
+    Año-Mes-Dia-horaMinuto-Hostname.txt
+    """
+    tftp_ip = tftp_ip.strip()
+
+    # Validación muy básica de IP
+    if not re.match(r"^\d{1,3}(\.\d{1,3}){3}$", tftp_ip):
+        return False, "IP de TFTP inválida. Ejemplo: 192.168.1.100"
+
+    hn = hostname if hostname else "device"
+    now = datetime.now()
+    tftp_filename = f"{now.year:04d}-{now.month:02d}-{now.day:02d}-{now.hour:02d}{now.minute:02d}-{hn}.txt"
+
+    device = build_device(device_ip, username, password, port, protocol)
+
+    try:
+        conn = ConnectHandler(**device)
+
+        try:
+            conn.enable()
+        except Exception:
+            pass
+
+        output = ""
+
+        # 1) Lanzamos el copy
+        conn.write_channel("copy running-config tftp:\n")
+        time.sleep(1)
+        out = conn.read_channel()
+        output += out
+
+        # 2) Enviamos IP del servidor TFTP
+        conn.write_channel(tftp_ip + "\n")
+        time.sleep(1)
+        out = conn.read_channel()
+        output += out
+
+        # 3) Enviamos nombre de archivo destino
+        conn.write_channel(tftp_filename + "\n")
+        time.sleep(1)
+        out = conn.read_channel()
+        output += out
+
+        # 4) Si pide confirmación [confirm], mandamos ENTER
+        if "[confirm]" in out.lower() or "confirm" in out.lower():
+            conn.write_channel("\n")
+            time.sleep(1)
+            out = conn.read_channel()
+            output += out
+
+        conn.disconnect()
+        return True, output
+
+    except NetmikoAuthenticationException as e:
+        return False, f"Error de autenticación: {e}"
+    except NetmikoTimeoutException as e:
+        return False, f"Timeout conectando al dispositivo: {e}"
+    except Exception as e:
+        return False, f"Error inesperado: {e}"
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     # Valores iniciales desde sesión
@@ -248,6 +312,7 @@ def index():
     port = session.get("port", 23)
     hostname = session.get("hostname", "")
     protocol = session.get("protocol", "telnet")  # telnet / ssh
+    tftp_server = session.get("tftp_server", "")
 
     vlans = []
     error_msg = None
@@ -260,7 +325,7 @@ def index():
     if request.method == "POST":
         action = request.form.get(
             "action", "apply"
-        )  # apply, fetch_all, save_config, download_config
+        )  # apply, fetch_all, save_config, download_config, tftp_upload
 
         # Datos de conexión
         form_ip = request.form.get("device_ip", "").strip()
@@ -269,13 +334,13 @@ def index():
         form_port = request.form.get("port", "").strip()
         form_hostname = request.form.get("hostname", "").strip()
         form_protocol = request.form.get("protocol", "").strip().lower()
+        form_tftp_server = request.form.get("tftp_server", "").strip()
 
         if form_ip:
             device_ip = form_ip
         if form_user:
             username = form_user
 
-        # protocolo: telnet o ssh
         if form_protocol in ("telnet", "ssh"):
             protocol = form_protocol
 
@@ -288,15 +353,16 @@ def index():
         else:
             port = 23 if protocol == "telnet" else 22
 
-        # hostname desde form
         if form_hostname:
             hostname = form_hostname
 
-        # Password: si la escribe, actualiza; si no, usamos la guardada
         if form_pass:
             password = form_pass
         else:
             password = stored_password
+
+        if form_tftp_server:
+            tftp_server = form_tftp_server
 
         # Guardar en sesión
         session["device_ip"] = device_ip
@@ -304,6 +370,7 @@ def index():
         session["port"] = port
         session["hostname"] = hostname
         session["protocol"] = protocol
+        session["tftp_server"] = tftp_server
         if password:
             session["device_password"] = password
 
@@ -330,7 +397,6 @@ def index():
             error_msg = "Faltan datos de conexión (IP, usuario o password)."
         else:
             if action == "fetch_all":
-                # Leer VLANs y hostname en una sola acción
                 ok_vlans, vlans_from_device, out_vlans = fetch_current_vlans(
                     device_ip=device_ip,
                     username=username,
@@ -368,7 +434,6 @@ def index():
                 if msgs_err:
                     error_msg = " ".join(msgs_err)
 
-                # Combinar outputs
                 netmiko_output = ""
                 if out_vlans:
                     netmiko_output += "=== show vlan brief ===\n" + out_vlans
@@ -400,16 +465,46 @@ def index():
                 if not ok:
                     error_msg = cfg_output
                 else:
-                    # Determinar hostname para el nombre del archivo
                     hn = hostname or parse_hostname_from_output(cfg_output) or "device"
                     now = datetime.now()
-                    # Año-Mes-Dia-horaMinuto-Nombredelequipo.txt (sin guion entre hora y minuto)
                     filename = f"{now.year:04d}-{now.month:02d}-{now.day:02d}-{now.hour:02d}{now.minute:02d}-{hn}.txt"
 
                     response = make_response(cfg_output)
                     response.headers["Content-Type"] = "text/plain"
                     response.headers["Content-Disposition"] = f"attachment; filename={filename}"
                     return response
+
+            elif action == "tftp_upload":
+                if not tftp_server:
+                    error_msg = "Debes especificar la IP del servidor TFTP (ej: 192.168.1.100)."
+                else:
+                    # Si no tenemos hostname, intentamos leerlo antes de generar el nombre del archivo
+                    if not hostname:
+                        ok_host, hostname_from_device, _ = fetch_hostname(
+                            device_ip=device_ip,
+                            username=username,
+                            password=password,
+                            port=port,
+                            protocol=protocol,
+                        )
+                        if ok_host and hostname_from_device:
+                            hostname = hostname_from_device
+                            session["hostname"] = hostname
+
+                    ok, output = upload_config_tftp(
+                        device_ip=device_ip,
+                        username=username,
+                        password=password,
+                        port=port,
+                        protocol=protocol,
+                        tftp_ip=tftp_server,
+                        hostname=hostname,
+                    )
+                    if ok:
+                        success_msg = f"Configuración enviada al servidor TFTP {tftp_server}."
+                        netmiko_output = output
+                    else:
+                        error_msg = output
 
             else:  # apply
                 if len(vlans) == 0 and not hostname:
@@ -438,6 +533,7 @@ def index():
         port=port,
         hostname=hostname,
         protocol=protocol,
+        tftp_server=tftp_server,
         password_value=password_for_field,
         error_msg=error_msg,
         success_msg=success_msg,

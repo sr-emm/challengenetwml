@@ -65,7 +65,7 @@
 
         /* Protocolo + Puerto */
         .port-proto-wrapper {
-            display: inline-flex;   /* inline para que el <td> centrado lo alinee */
+            display: inline-flex;
             gap: 8px;
             align-items: center;
             width: 95%;
@@ -139,7 +139,7 @@
         <h1>Challenge ML</h1>
     </div>
 
-    <p>Conectate al dispositivo (GNS3 / físico / lab), obtené las VLANs y el hostname actuales, modificalos, hacé write memory y descargá el backup.</p>
+    <p>Conectate al dispositivo (GNS3 / físico / lab), obtené las VLANs y el hostname actuales, modificalos, hacé write memory, descargá el backup o subí la config a un servidor TFTP.</p>
 
     <form method="post" id="vlanForm">
         <div class="section-title">Datos de conexión al dispositivo</div>
@@ -172,12 +172,10 @@
                 <td>Protocolo y Puerto</td>
                 <td>
                     <div class="port-proto-wrapper">
-                        <!-- Primero protocolo -->
                         <select name="protocol">
                             <option value="telnet" {% if protocol == 'telnet' %}selected{% endif %}>Telnet</option>
                             <option value="ssh" {% if protocol == 'ssh' %}selected{% endif %}>SSH</option>
                         </select>
-                        <!-- Luego puerto -->
                         <input type="number" name="port"
                                placeholder="Ej: 23"
                                value="{{ port or 23 }}">
@@ -192,9 +190,17 @@
                            value="{{ hostname or '' }}">
                 </td>
             </tr>
+            <tr>
+                <td>Servidor TFTP (IP)</td>
+                <td>
+                    <input type="text" name="tftp_server"
+                           placeholder="Ej: 192.168.1.100"
+                           value="{{ tftp_server or '' }}">
+                </td>
+            </tr>
         </table>
 
-        <!-- Grupo superior: obtener info + write memory + download -->
+        <!-- Grupo superior: obtener info + write memory + download + TFTP -->
         <div class="btn-group">
             <button type="submit" class="btn" name="action" value="fetch_all">
                 Obtener VLANs y Hostname actuales
@@ -204,6 +210,9 @@
             </button>
             <button type="submit" class="btn" name="action" value="download_config">
                 Descargar configuración (txt)
+            </button>
+            <button type="submit" class="btn" name="action" value="tftp_upload">
+                Subir config a TFTP
             </button>
         </div>
 
