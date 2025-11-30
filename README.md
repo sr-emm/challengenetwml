@@ -20,14 +20,16 @@ Fase 1:
 
   3. Configuracion de VLANs
     Dentro de la parte de VLANs podemos agregar la que queramos y la misma va a ser creada con el nombre elegido.
-    <img width="1020" height="1250" alt="image" src="https://github.com/user-attachments/assets/8c1f8b64-1f5b-4617-967b-f8c29a599541" />
+    <img width="1020" height="1250" alt="image" src="https://github.com/user-attachments/assets/8c1f8b64-1f5b-4617-967b-f8c29a599541" /> 
     <img width="956" height="534" alt="image" src="https://github.com/user-attachments/assets/97b1da01-1cea-4ce3-adca-21242c349c82" />
-    Si queremos cambiarle el nombre es tan facil como hacerlo y aplicar de nuevo la configuraicon:
-    <img width="1020" height="1242" alt="image" src="https://github.com/user-attachments/assets/f4e1b1b5-dae3-4a76-9ab4-cfa2dcf0214d" />
+    .
+    Si queremos cambiarle el nombre es tan facil como hacerlo y aplicar de nuevo la configuracion: 
+    <img width="1020" height="1242" alt="image" src="https://github.com/user-attachments/assets/f4e1b1b5-dae3-4a76-9ab4-cfa2dcf0214d" /> 
     <img width="971" height="632" alt="image" src="https://github.com/user-attachments/assets/abb888b5-e7be-4eb6-a78d-2b55ac0e29cc" />
+    .
     La misma esta sobreescribiendo lo actual, esto lo hace bastante simple pero podria ser contraproducente. La ventaja es que extremadamente facil cambiar los nombres a todas las que hagan falta de manera masiva.
     Tiene un limite de 20 caracteres en el nombre de la VLAN para evitar problemas.
-  4. Cambio de Nombre del Switch
+  5. Cambio de Nombre del Switch
     Dentro del apartado Nombre del Switch podemos ver cual esta al obtener la info del equipo actualmente
     <img width="972" height="155" alt="image" src="https://github.com/user-attachments/assets/9b59c6bb-52fd-4a7e-93a8-fce7192f8716" />
     <img width="1026" height="160" alt="image" src="https://github.com/user-attachments/assets/588a54ac-2f2d-40c6-8419-6ba7e37a89b6" />
@@ -35,11 +37,11 @@ Fase 1:
     <img width="997" height="996" alt="image" src="https://github.com/user-attachments/assets/2d79ad19-a736-4201-bc22-367b865b662a" />
     <img width="992" height="163" alt="image" src="https://github.com/user-attachments/assets/18b59ad0-b6da-4d68-bcf3-d4fdb62db60e" />
     
-  5. Guardar Config
+  6. Guardar Config
     Funciona con un simple wirte memory al presionar el boton con ese mismo nombre
     <img width="1059" height="1010" alt="image" src="https://github.com/user-attachments/assets/2ae8d636-f159-446a-a909-6e5d48fb5626" />
 
-  6. Backup de Config
+  7. Backup de Config
     6.1 Descargable
       Se creo la posibilidad de descargar el archivo con el boton correspondiente. El archivo incluye un formato que esta perfectamente diseñado para guardar multiples teniendo un control claro de cual es el mas reciente: año-mes-dia-horaminutos-hostname.txt
       <img width="465" height="69" alt="image" src="https://github.com/user-attachments/assets/58eb6a7d-9161-49af-9742-6b650e5dac57" />
