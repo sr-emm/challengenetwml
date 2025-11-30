@@ -1,58 +1,58 @@
 # Challenge Networking ML
+Dentro del Git podran encontrar todo lo necesario para este challenge. Dividiendolo por fases tenemos
 
-Creo este Git para concentrar la programacion que requiere el Challenge. La misma debera lograr:
-Usando un Frontend:
-  - Configurar multiples VLANs especificando ID y nombre
-    - VLAN 10: "VLAN_DATOS"
-    - VLAN 20: "VLAN_VOZ"
-    - VLAN 50: "VLAN_SEGURIDAD"
-  - Cambiar nombre del switch
-  - Guardar Configuracion
-  - Hacer Backup de configuracion
-    - El nombre debe incluir: hostname, fecha y hora del backup
-  - El script debe validar la configuracion actual del equipo. Alertando en caso de que difiera la config con la implementada en el frontend o en la salida del script
+Fase 1:
+  1. Repositorio Git
+    Se utiliza este repositorio haciendo un link con la aplicacion de Github Desktop para poder ir modificando los archivos de manera local pero que vayan subiendo a la nube para el control de cambios. Una herramienta que no habia usado y esta excelente la verdad.
+  2. Frontend de Configuracion de VLANs
+    Viendo las opciones que se mencionaron, creo que la mejor es FLASK que al ser web podra usasrse en cualquier dispositivo a futuro. Luego de muchas interacciones se llego a un front end que cumple con todo lo requerido.
+    Tiene alguna limitacion que a proposito no solucione como el borrar vlans. Esto podria ser muy peligroso por que podria con un boton detener la operativa, por esto de aplicarse deberia tener varios "checks" que permitan estar especialmente seguros de que no vaya a afectar nada o que el impacto sea reducido.
+     Describiendo las opciones tenemos:
+<img width="1011" height="819" alt="image" src="https://github.com/user-attachments/assets/6d2dd9e6-7214-4737-af63-130b12d434b2" />
+      La parte de conexion es intuitiva soicitando los datos para conexion hacia el mismo. IP, usuario y password. Luego puedes elegir el protocolo (telnet o SSH) y el puerto, este ultimo es especialmente util dado que al tener los equipos virtualizados tengo puertos muy disintos del 22/23. Una vez colocas los datos puedes presionar "Obtener VLANs y Hostname actuales"
+     <img width="965" height="515" alt="image" src="https://github.com/user-attachments/assets/d9aa7bc8-8315-4572-b3d3-da87186690f6" />
+     Con esto obtienes todos los datos que se configuran y queda un output de los comandos obtenimos por netmiko
+     <img width="981" height="1219" alt="image" src="https://github.com/user-attachments/assets/77817c8e-e36b-4c36-9009-5075217a7155" />
+     <img width="1028" height="542" alt="image" src="https://github.com/user-attachments/assets/1a1426fa-ebc1-4380-aa04-919f8d4f22da" />
 
-# Realizado
-- Se crea un Frontend web que permitira sea compatible con cualquier dispositivo requerido haciendolo mas universal que uno especifico para windows por ejemplo.
-- Se le coloca los siguientes datos para acceder al equipo
-  - IP
-  - User
-  - Password
-  - Puerto
-- 
+     De aca se pueden agregar VLANs con el boton "Agregar VLAN" donde ahi puedes colocarle la ID que prefieras pero que sea valida (no admite fuera de las 4094) y permite cambiar los nombres. Para evitar informacion innecesaria se omiten las vlan 1002 a la 1005 dado que son del sistema operativo.
 
+  3. Configuracion de VLANs
+    Dentro de la parte de VLANs podemos agregar la que queramos y la misma va a ser creada con el nombre elegido.
+    <img width="1020" height="1250" alt="image" src="https://github.com/user-attachments/assets/8c1f8b64-1f5b-4617-967b-f8c29a599541" />
+    <img width="956" height="534" alt="image" src="https://github.com/user-attachments/assets/97b1da01-1cea-4ce3-adca-21242c349c82" />
+    Si queremos cambiarle el nombre es tan facil como hacerlo y aplicar de nuevo la configuraicon:
+    <img width="1020" height="1242" alt="image" src="https://github.com/user-attachments/assets/f4e1b1b5-dae3-4a76-9ab4-cfa2dcf0214d" />
+    <img width="971" height="632" alt="image" src="https://github.com/user-attachments/assets/abb888b5-e7be-4eb6-a78d-2b55ac0e29cc" />
+    La misma esta sobreescribiendo lo actual, esto lo hace bastante simple pero podria ser contraproducente. La ventaja es que extremadamente facil cambiar los nombres a todas las que hagan falta de manera masiva.
+    Tiene un limite de 20 caracteres en el nombre de la VLAN para evitar problemas.
+  4. Cambio de Nombre del Switch
+    Dentro del apartado Nombre del Switch podemos ver cual esta al obtener la info del equipo actualmente
+    <img width="972" height="155" alt="image" src="https://github.com/user-attachments/assets/9b59c6bb-52fd-4a7e-93a8-fce7192f8716" />
+    <img width="1026" height="160" alt="image" src="https://github.com/user-attachments/assets/588a54ac-2f2d-40c6-8419-6ba7e37a89b6" />
+    O cambiarlo y darle aplicar cambios en el dispositivo
+    <img width="997" height="996" alt="image" src="https://github.com/user-attachments/assets/2d79ad19-a736-4201-bc22-367b865b662a" />
+    <img width="992" height="163" alt="image" src="https://github.com/user-attachments/assets/18b59ad0-b6da-4d68-bcf3-d4fdb62db60e" />
+    
+  5. Guardar Config
+    Funciona con un simple wirte memory al presionar el boton con ese mismo nombre
+    <img width="1059" height="1010" alt="image" src="https://github.com/user-attachments/assets/2ae8d636-f159-446a-a909-6e5d48fb5626" />
 
-Pasos realizados:
-1. Se hace un resumen de las actividades a realizar dividiendolas por partes y prioridad.
-2. Se usa ChatGPT como IA principal en esta fase.
-3. Se crea un proyecto dentro de la IA para concentrar la informacion.
-4. Se compara los frontend que mencionan en el challenge. Parece que lo mas simple seria flask por ser web
+  6. Backup de Config
+    6.1 Descargable
+      Se creo la posibilidad de descargar el archivo con el boton correspondiente. El archivo incluye un formato que esta perfectamente diseñado para guardar multiples teniendo un control claro de cual es el mas reciente: año-mes-dia-horaminutos-hostname.txt
+      <img width="465" height="69" alt="image" src="https://github.com/user-attachments/assets/58eb6a7d-9161-49af-9742-6b650e5dac57" />
+      Se adjunta este archivo en el repositorio
+    6.2 TFTP
+      Se utiliza el mismo nombre que en el descargable pero se debe colocar la IP en el campo que se destina para eso:
+      <img width="961" height="139" alt="image" src="https://github.com/user-attachments/assets/8c7c5113-0ece-403d-b92f-d0c8d644d13c" />
+      <img width="992" height="304" alt="image" src="https://github.com/user-attachments/assets/93a9a8fa-c1d6-4781-8323-f3af4fbaddf1" />
+      Hubo que colocar un pequeño delay para que funcionara esta funcion. 
 
-==============================================================================
+  7. Validacion de configuracion
+    En cada paso de la configuracion se muestra la salida exacta de la consola, esto hace que si hay un error se pueda visualizar. Al la configuracion siempre sobreescribirse al aplicar cambios, no veo como podria coincidir. Esto podria pasar si se da una etpaa de evaluacion de que esta vs lo que se quiere configurar y aceptar o negar los cambios segun se decida. 
+  
+  8. Control de Versiones
+    Se sube la mayor cantidad de informacion posible para ir documentando todo el proceso y tener facil algun rollback de ser necesario.   
+  9. README
 
-Manos a la obra:
-1. La IA establece instrucciones para trabajar con flask y concentrarse en un paso a la vez.
-2. Establece una estructura sencilla:
-  2.1. app.py
-  2.2. requirements.txt
-  2.3. tempaltes (folder)
-   2.3.1. index.html
-4. Se levanto un ambiente virtual de python en la pc windows, ya tenia Python instalado por lo que fue medio directo.
-5. Se instala flask, es la version 3.1.2, los requirements estaban en 3.0.0 por lo que se cambian para ser mas flexibles a "Flask>=3.1.2,<4.0"
-6. Se llega a ver la pagina de prueba en localhost:5000 
-7. La IA queria establecer las 3 vlan necesarias de forma hardcodeada, pero esto es muy limitante por lo que cambio para uqe la misma permita agregar vlan ID y nombre que se quiera.
-<img width="1746" height="480" alt="image" src="https://github.com/user-attachments/assets/6cd22d0b-da96-45d6-bd27-0e58d272a7cd" />
-
-8. Esta version si quieres realizar un cambio, debes de volver a escribir todo de nuevo. Asi que buscare que la informacion permanezca y se pueda editar luego.
-9. Ok ahora tiene mas sentido, se pueden editar luego. Esto puede ser util luego cuando se obtenga la informacion del switch al conectarse. Tambien se prueba crear una vlan 5000 para comprobar que tenga sentido, funciona. 
-<img width="951" height="827" alt="image" src="https://github.com/user-attachments/assets/d41b81d6-64c1-4f74-8925-c263e2840b6b" />
-<img width="351" height="116" alt="image" src="https://github.com/user-attachments/assets/bffee0c4-de05-4a3c-a30e-27a479c6c92b" />
-
-10. Se agregan los archivos al github para tener control de cambios. Se empieza a instalar y configurar netmiko.
-11. Se configura en GNS3 un switch IOU L2 para poder establecer las pruebas. Esto hace que deba agregar el puerto para que se conecte al telnet del equipo.
-<img width="1078" height="861" alt="image" src="https://github.com/user-attachments/assets/53c6f37b-8b44-4b3e-ac37-67e4da28c192" />
-<img width="969" height="879" alt="image" src="https://github.com/user-attachments/assets/0c6ca691-93e5-4533-9235-4a19fa94e5e9" />
-
-12. Se hace cambios para que pueda obtener las vlans creadas y lograr tener una clave persistente para no tener que colocarla cada vez. Esto es por el lab, en produccion se tendria que tener una mejor forma como autenticacion por certificado.
-
-13. Se agregan vlan
