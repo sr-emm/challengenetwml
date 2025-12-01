@@ -106,8 +106,9 @@ Instalar Python y crear un entorno virtual.
 En mi caso generé algo similar a:
 
 <img width="445" height="33" alt="image" src="https://github.com/user-attachments/assets/47168e3a-2c81-4023-922c-602dc75f4f65" />
+<img width="231" height="28" alt="image" src="https://github.com/user-attachments/assets/299ac5d8-7178-47be-aaf3-cc77a2d672ab" />
 
-(La captura muestra el entorno creado).
+
 
 3. Instalar Flask (frontend)
 
