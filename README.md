@@ -1,4 +1,3 @@
-"""
 # Challenge Networking ML (Parte 1: Automatización de Switch)
 
 Este repositorio contiene la solución para la Parte 1 del Challenge de Automatización de ML, enfocada en la interacción con un switch Cisco (simulado en GNS3) mediante una interfaz web desarrollada en Flask y Netmiko.
@@ -136,5 +135,3 @@ La herramienta utiliza dos métodos de validación:
 El proyecto se gestiona mediante Git. El historial de commits refleja un uso amplio de la herramienta, aunque se debe mejorar el como y cuando se hacen para que sean más utiles. 
 
 <img width="1831" height="1111" alt="image" src="https://github.com/user-attachments/assets/51904968-5e01-4ac2-a070-ddcf714c3e3d" />
-
-"""
