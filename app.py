@@ -1,10 +1,11 @@
 """
 app.py
 ======
-Backend Refactorizado v2
+Backend Refactorizado v4 (Final)
 Mejoras:
-- Debug explícito: Muestra en el output qué protocolo y puerto está usando.
-- Sanitización de inputs: Fuerza minúsculas en el protocolo.
+- Formato de fecha unificado (AAAA-MM-DD-HHMM-Host.txt) para TFTP y Descarga Web.
+- Debug explícito de protocolo.
+- Manejo de escritura interactiva (write mem).
 """
 
 from flask import Flask, render_template, request, session, make_response
@@ -22,16 +23,13 @@ app.secret_key = "lab-secret-key-change-me"
 IGNORE_VLANS = {"1002", "1003", "1004", "1005"}
 
 def build_device(device_ip, username, password, port, protocol):
-    # Aseguramos que protocol sea string limpio
     protocol = str(protocol).strip().lower()
     
-    # Lógica explícita
     if protocol == "ssh":
         device_type = "cisco_ios"
     elif protocol == "telnet":
         device_type = "cisco_ios_telnet"
     else:
-        # Fallback por seguridad
         device_type = "cisco_ios"
 
     return {
@@ -53,8 +51,6 @@ def fetch_current_data(device_ip, username, password, port, protocol):
             prompt = conn.find_prompt()
             hostname = prompt[:-1] if prompt else "Unknown"
             out_vlan = conn.send_command("show vlan brief")
-            
-            # Devolvemos el debug + el output real
             return True, {"vlans": parse_vlans_from_show(out_vlan), "hostname": hostname}, debug_info + out_vlan
 
     except Exception as e:
@@ -85,7 +81,15 @@ def save_mem(device_ip, username, password, port, protocol):
     try:
         with ConnectHandler(**device) as conn:
             conn.enable()
-            output = conn.save_config()
+            cmd = "write memory"
+            output = conn.send_command_timing(cmd)
+            
+            if "Continue" in output or "confirm" in output or "NVRAM" in output:
+                output += conn.send_command_timing("y")
+            
+            if "[OK]" in output:
+                output += "\n--- GUARDADO EXITOSO ---"
+            
         return True, f"Protocolo usado: {protocol.upper()}\n" + output
     except Exception as e:
         return False, str(e)
@@ -103,8 +107,10 @@ def download_txt(device_ip, username, password, port, protocol):
 def upload_tftp_smart(device_ip, username, password, port, protocol, tftp_ip, hostname):
     device = build_device(device_ip, username, password, port, protocol)
     hn = hostname if hostname else "switch-backup"
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M")
-    filename = f"{timestamp}-{hn}.cfg"
+    
+    # Formato TFTP corregido
+    timestamp = datetime.now().strftime("%Y-%m-%d-%H%M")
+    filename = f"{timestamp}-{hn}.txt"
 
     try:
         with ConnectHandler(**device) as conn:
@@ -142,18 +148,14 @@ def index():
     success_msg = None
     netmiko_output = None
     
-    # Defaults de sesión
     session_data = {k: session.get(k, "") for k in ["device_ip", "username", "port", "hostname", "protocol", "tftp_server"]}
     password = session.get("device_password", "")
     
-    # Si la sesión está vacía, forzamos defaults seguros
     if not session_data["protocol"]: session_data["protocol"] = "ssh"
     if not session_data["port"]: session_data["port"] = 22
 
     if request.method == "POST":
         action = request.form.get("action")
-        
-        # Leemos el protocolo explícitamente y lo limpiamos
         raw_protocol = request.form.get("protocol", "ssh")
         clean_protocol = raw_protocol.strip().lower()
 
@@ -179,13 +181,11 @@ def index():
         except:
             port_int = 22 if clean_protocol == "ssh" else 23
 
-        # Lógica de aplicación de VLANs
         if action == "apply":
             ids = request.form.getlist("vlan_id")
             names = request.form.getlist("vlan_name")
             vlans = [{"id": i, "name": n} for i, n in zip(ids, names) if i and i not in IGNORE_VLANS]
 
-        # Dispatcher
         if not form_data["device_ip"]:
              error_msg = "Falta IP del dispositivo."
         
@@ -230,7 +230,12 @@ def index():
             if ok:
                 response = make_response(out)
                 response.headers["Content-Type"] = "text/plain"
-                fn = f"backup-{form_data['hostname'] or 'switch'}.txt"
+                
+                # --- AQUÍ ESTÁ LA CORRECCIÓN DE FORMATO PARA LA DESCARGA WEB ---
+                hn = form_data['hostname'] or 'switch'
+                timestamp = datetime.now().strftime("%Y-%m-%d-%H%M")
+                fn = f"{timestamp}-{hn}.txt"
+                
                 response.headers["Content-Disposition"] = f"attachment; filename={fn}"
                 return response
             else:
@@ -257,7 +262,7 @@ def index():
             username=form_data["username"],
             port=form_data["port"],
             hostname=form_data["hostname"],
-            protocol=form_data["protocol"], # Pasamos el protocolo limpio de vuelta al template
+            protocol=form_data["protocol"],
             tftp_server=form_data["tftp_server"],
             password_value=password,
             error_msg=error_msg,
@@ -265,7 +270,6 @@ def index():
             netmiko_output=netmiko_output
         )
 
-    # GET REQUEST
     return render_template(
         "index.html",
         vlans=[],
