@@ -1,136 +1,140 @@
-# Challenge Networking ML
+"""
+# Challenge Networking ML (Parte 1: Automatización de Switch)
 
-Dentro del repo de Git podrán encontrar todo lo necesario para este challenge.
-Dividiéndolo por fases tenemos:
+Este repositorio contiene la solución para la Parte 1 del Challenge de Automatización de ML, enfocada en la interacción con un switch Cisco (simulado en GNS3) mediante una interfaz web desarrollada en Flask y Netmiko.
 
-Fase 1
-1. Repositorio Git
+El diseño del Frontend fue evolucionado a un **Dashboard NOC** (Network Operations Center) con una vista dividida (50/50) que permite monitorizar el output exacto de la consola en tiempo real mientras se modifica la configuración.
 
-Se utiliza este repositorio haciendo un link con la aplicación de GitHub Desktop para poder ir modificando los archivos de manera local pero que vayan subiendo a la nube para el control de cambios.
-Es una herramienta que no había usado y la verdad está excelente.
+## 💾 Instalación y Configuración (Requisito 9)
 
-2. Frontend de configuración de VLANs
+### 1. Ubicación de Archivos
 
-Viendo las opciones que se mencionaron, creo que la mejor es Flask, que al ser web podrá usarse en cualquier dispositivo a futuro.
-Luego de muchas iteraciones se llegó a un frontend que cumple con todo lo requerido.
+Coloque `app.py` y la carpeta `templates/` (que contiene `index.html`) en la misma raíz del proyecto.
 
-Tiene alguna limitación que a propósito no solucioné, como el borrado de VLANs en el dispositivo. Esto podría ser muy peligroso porque con un botón se podría detener la operativa; por eso, en caso de implementarse, debería tener varios “checks” que permitan estar especialmente seguros de que no va a afectar nada o que el impacto sea reducido.
+### 2. Python y Entorno Virtual (Requisito 9)
 
-Descripción general
-<img width="1011" height="819" alt="image" src="https://github.com/user-attachments/assets/6d2dd9e6-7214-4737-af63-130b12d434b2" />
+Es altamente recomendado usar un entorno virtual (`venv`) para aislar las dependencias:
 
-La parte de conexión es intuitiva, solicitando los datos para conectarse al equipo: IP, usuario y password.
-Luego se puede elegir el protocolo (Telnet o SSH) y el puerto; este último es especialmente útil dado que, al tener los equipos virtualizados, uso puertos muy distintos de los típicos 22/23.
-Una vez colocados los datos se puede presionar “Obtener VLANs y Hostname actuales”.
+```bash
+# 1. Crear el entorno virtual
+python3 -m venv venv
 
-<img width="965" height="515" alt="image" src="https://github.com/user-attachments/assets/d9aa7bc8-8315-4572-b3d3-da87186690f6" />
+# 2. Activar el entorno
+source venv/bin/activate
+```
 
-Con esto se obtienen todos los datos que se configuran y queda un output de los comandos que se ejecutan vía Netmiko:
+*(Su consola ahora mostrará `(venv)` al inicio).*
 
-<img width="981" height="1219" alt="image" src="https://github.com/user-attachments/assets/77817c8e-e36b-4c36-9009-5075217a7155" /> <img width="1028" height="542" alt="image" src="https://github.com/user-attachments/assets/1a1426fa-ebc1-4380-aa04-919f8d4f22da" />
-
-Desde acá se pueden agregar VLANs con el botón “Agregar VLAN”, donde se puede colocar la ID que se prefiera (siempre que sea válida; no admite valores fuera del rango 1–4094) y se permite cambiar los nombres.
-Para evitar información innecesaria se omiten las VLAN 1002 a la 1005, dado que son del sistema operativo.
-
-3. Configuración de VLANs
-
-Dentro de la parte de VLANs se puede agregar la que se quiera y la misma va a ser creada con el nombre elegido.
-
-<img width="1020" height="1250" alt="image" src="https://github.com/user-attachments/assets/8c1f8b64-1f5b-4617-967b-f8c29a599541" /> <img width="956" height="534" alt="image" src="https://github.com/user-attachments/assets/97b1da01-1cea-4ce3-adca-21242c349c82" />
-
-Si queremos cambiarle el nombre es tan fácil como editarlo y aplicar de nuevo la configuración:
-
-<img width="1020" height="1242" alt="image" src="https://github.com/user-attachments/assets/f4e1b1b5-dae3-4a76-9ab4-cfa2dcf0214d" /> <img width="971" height="632" alt="image" src="https://github.com/user-attachments/assets/abb888b5-e7be-4eb6-a78d-2b55ac0e29cc" />
-
-La herramienta siempre sobrescribe la configuración actual de VLANs, lo que la hace muy simple pero podría ser contraproducente si se usa sin cuidado.
-La ventaja es que es extremadamente fácil cambiar los nombres de todas las VLAN que hagan falta de manera masiva.
-
-Hay un límite de 20 caracteres en el nombre de la VLAN para evitar problemas.
-
-4. Cambio de nombre del switch
-
-Dentro del apartado “Nombre del switch” podemos ver cuál es el actual al obtener la info del equipo:
-
-<img width="972" height="155" alt="image" src="https://github.com/user-attachments/assets/9b59c6bb-52fd-4a7e-93a8-fce7192f8716" /> <img width="1026" height="160" alt="image" src="https://github.com/user-attachments/assets/588a54ac-2f2d-40c6-8419-6ba7e37a89b6" />
-
-O podemos cambiarlo y darle “Aplicar cambios en el dispositivo”:
-
-<img width="997" height="996" alt="image" src="https://github.com/user-attachments/assets/2d79ad19-a736-4201-bc22-367b865b662a" /> <img width="992" height="163" alt="image" src="https://github.com/user-attachments/assets/18b59ad0-b6da-4d68-bcf3-d4fdb62db60e" />
-5. Guardar configuración
-
-Funciona con un simple write memory al presionar el botón con ese mismo nombre:
-
-<img width="1059" height="1010" alt="image" src="https://github.com/user-attachments/assets/2ae8d636-f159-446a-a909-6e5d48fb5626" />
-6. Backup de configuración
-6.1 Descargable
-
-Se creó la posibilidad de descargar el archivo con el botón correspondiente.
-El archivo incluye un formato de nombre pensado para poder guardar múltiples versiones teniendo un control claro de cuál es la más reciente:
-
-año-mes-dia-horaminutos-hostname.txt
-
-<img width="465" height="69" alt="image" src="https://github.com/user-attachments/assets/58eb6a7d-9161-49af-9742-6b650e5dac57" />
-
-Este archivo se adjunta en el repositorio.
-
-6.2 TFTP
-
-Se utiliza el mismo nombre que en el descargable, pero se debe colocar solo la IP del servidor TFTP en el campo destinado para eso:
-
-<img width="961" height="139" alt="image" src="https://github.com/user-attachments/assets/8c7c5113-0ece-403d-b92f-d0c8d644d13c" /> <img width="992" height="304" alt="image" src="https://github.com/user-attachments/assets/93a9a8fa-c1d6-4781-8323-f3af4fbaddf1" />
-
-Fue necesario colocar un pequeño delay para que esta función funcionara correctamente.
-
-7. Validación de configuración
-
-En cada paso de la configuración se muestra la salida exacta de la consola, lo que permite ver rápidamente si hay algún error.
-Como la configuración siempre se sobrescribe al aplicar cambios, no veo un caso donde quede una configuración parcial.
-A futuro esto podría mejorarse con una etapa de evaluación de “config actual vs config deseada” y aceptar o rechazar los cambios según se decida.
-
-8. Control de versiones
-
-Se sube la mayor cantidad de información posible para ir documentando todo el proceso y tener un rollback sencillo si fuera necesario.
-
-9. README
-
-Este README documenta el funcionamiento general, la instalación y el flujo de trabajo.
-
-# Instalación
-1. Ubicación de archivos
-
-Colocar todos los archivos del proyecto en una misma carpeta.
-
-2. Python y entorno virtual
-
-Instalar Python y crear un entorno virtual.
-En mi caso generé algo similar a:
-
-<img width="445" height="33" alt="image" src="https://github.com/user-attachments/assets/47168e3a-2c81-4023-922c-602dc75f4f65" />
-<img width="231" height="28" alt="image" src="https://github.com/user-attachments/assets/299ac5d8-7178-47be-aaf3-cc77a2d672ab" />
+<img width="422" height="35" alt="image" src="https://github.com/user-attachments/assets/974eae03-895b-4818-8bf6-2f7ad50c2358" />
 
 
+### 3. Instalación de Dependencias
 
-3. Instalar Flask (frontend)
+Con el entorno virtual activado, instale las librerías necesarias:
 
-Dentro del entorno virtual, instalar Flask:
+```bash
+pip install flask netmiko
+```
 
-pip install Flask
+### 4. Ejecución de la Aplicación
 
-<img width="485" height="30" alt="image" src="https://github.com/user-attachments/assets/764a66c4-ea44-4d24-9881-3ae847ea7109" />
-4. Instalar Netmiko
+Ejecute el script principal. La aplicación se levantará en el puerto **5001** y será accesible desde cualquier IP (`0.0.0.0`) en la red:
 
-En el mismo entorno virtual:
+```bash
+python3 app.py
+```
 
-pip install netmiko
+<img width="744" height="210" alt="image" src="https://github.com/user-attachments/assets/e8cec7d2-9bb9-4cf0-bf3a-743c51065ce2" />
 
-<img width="1165" height="44" alt="image" src="https://github.com/user-attachments/assets/fca7ebdd-b9a5-4e8d-8ad9-c3cda8690884" />
-5. Ejecutar la aplicación
+Acceda a la aplicación en su navegador: `http://<IP_DEL_SERVIDOR>:5001`
 
-Cambiarse al folder donde está el script y correr la app con Python:
+<img width="1600" height="1165" alt="image" src="https://github.com/user-attachments/assets/1888193a-57bd-47c3-b4a3-b4a23b8a9fc6" />
 
-python .\app.py
+## 🛡️ Hardening y Robustez (Garantía de Producción)
 
-<img width="1157" height="34" alt="image" src="https://github.com/user-attachments/assets/791a7863-bb95-4e6d-9248-249fbb3a1ada" />
+Se implementaron mejoras críticas en el backend (Netmiko/Flask) para asegurar la integridad de la configuración y la fiabilidad del script en entornos de laboratorio o producción:
 
-Es importante que la estructura de carpetas y los nombres de los archivos no se cambien.
-Además, dentro de la carpeta ML Challenge está la simulación en GNS3 que se usó para realizar este challenge.
+* **Validación Estricta de Hostname:** El sistema rechaza cualquier hostname que contenga espacios o caracteres que no sean alfanuméricos, guiones medios (`-`) o guiones bajos (`_`) (Regex: `^[\w-]+$`). Esto previene fallos de sintaxis en Cisco IOS y garantiza nombres de archivo válidos para backups.
+* **Gestión de Conexiones Seguras:** Se utiliza el patrón `with ConnectHandler(...) as conn:` (Context Managers) para garantizar que la sesión SSH/Telnet se cierre limpiamente después de cada transacción, evitando sesiones huérfanas en el switch.
+
+<img width="1191" height="86" alt="image" src="https://github.com/user-attachments/assets/1a82eed0-ca44-477e-86ed-0edcf2657703" />
+
+* **Interacciones Robustas:** Las operaciones interactivas críticas (`copy run tftp` y `write memory`) utilizan el método `send_command_timing()`. Esto elimina el uso de `time.sleep()` y permite que el script responda dinámicamente a los prompts del dispositivo (como la pregunta `Continue? [no]:` en vIOS/IOU), haciendo el script mucho más fiable.
+* **Formato de Backup Unificado:** Se asegura que el formato del nombre de archivo (`AAAA-MM-DD-HHMM-HOSTNAME.txt`) sea consistente y a prueba de errores para las descargas directas (`download_config`) y las subidas a TFTP.
+
+    <img width="538" height="43" alt="image" src="https://github.com/user-attachments/assets/44d5313a-5e29-47ad-83a0-89c16a0cc129" />
+
+## 💻 Características y Flujo de Trabajo
+
+### 1. Interfaz y Parámetros de Acceso (Requisito 2)
+
+El frontend presenta una interfaz clara dividida en dos tarjetas principales y una terminal lateral (Split View):
+
+* **Persistencia:** Todos los campos (IP, Usuario, Password, TFTP) mantienen los datos entre acciones (gracias al uso de la sesión de Flask).
+* **Protocolo Inteligente:** Al seleccionar `SSH`, el puerto se ajusta automáticamente a `22`; al seleccionar `Telnet`, se ajusta a `23`.
+* **Terminal Consolidada:** El output de todos los comandos (lectura, aplicación, backup) se muestra en la terminal de la derecha, incluyendo mensajes de *debug* sobre el protocolo de conexión usado.
+
+<img width="2422" height="984" alt="image" src="https://github.com/user-attachments/assets/30d28e46-f2d8-450f-8aa8-c3891dabcd2c" />
+
+### 2. Obtención y Edición de Datos (`Fetch All`)
+
+Al presionar **"Leer Config"**, el script establece una única conexión para obtener los datos más recientes del switch:
+
+* **Hostname:** Se lee el hostname actual del dispositivo (utilizando el prompt, que es rápido).
+* **VLANs:** Se lee la salida de `show vlan brief`.
+  * **Filtro:** Las VLANs de sistema (1002 a 1005) son automáticamente filtradas y omitidas de la interfaz.
+
+<img width="2359" height="1242" alt="image" src="https://github.com/user-attachments/assets/dfc0eab1-935b-43d3-b0ee-461eced1a5fa" />
+
+### 3. Configuración de Hostname y VLANs (Requisito 3 & 4)
+
+Los cambios se aplican al presionar **"APLICAR CAMBIOS"**.
+
+#### Hostname (Requisito 4)
+
+* Se lee el valor del campo "Hostname del Switch" y se valida contra el regex de seguridad.
+* Si es válido, se aplica el cambio (`hostname <nuevo_nombre>`).
+
+#### VLANs (Requisito 3)
+
+* **Creación/Modificación:** Se pueden agregar filas (`Agregar VLAN`) o editar IDs/Nombres.
+* **Regla de Negocio:** Se impone un límite de **20 caracteres** en el nombre de la VLAN.
+* **Comportamiento:** La herramienta sobrescribe la configuración de las VLANs existentes o crea las nuevas, manteniendo el flujo simple de "configuración deseada".
+
+<img width="2394" height="1177" alt="image" src="https://github.com/user-attachments/assets/4a979012-ce33-4971-b41b-c25fb15b8426" />
+
+### 4. Funcionalidades de Backup (Requisito 5 & 6)
+
+#### Guardar Configuración (Requisito 5)
+
+El botón **"Write Mem"** ejecuta el comando `write memory` (o `copy run start`), manejando cualquier prompt de confirmación.
+
+<img width="2027" height="534" alt="image" src="https://github.com/user-attachments/assets/84828a49-3238-415b-bf5c-6f8c288379d3" />
+
+#### Backup Descargable (Requisito 6)
+
+El botón **"Descargar .txt"** genera un archivo `running-config` y lo envía directamente al navegador del usuario.
+
+* **Formato de Nombre:** `AAAA-MM-DD-HHMM-HOSTNAME.txt`.
+
+<img width="447" height="139" alt="image" src="https://github.com/user-attachments/assets/53bef03d-39b0-41a6-987e-d959276d8761" />
+
+#### Subir a TFTP (Requisito 6 - Opcional)
+
+El botón **"Subir a TFTP"** ejecuta el comando `copy running-config tftp:` hacia el servidor especificado, manejando el diálogo interactivo de la CLI.
+<img width="2396" height="260" alt="image" src="https://github.com/user-attachments/assets/97910386-1aac-42fe-b91e-274817547794" />
+
+### 5. Validación de Configuración (Requisito 7)
+
+La herramienta utiliza dos métodos de validación:
+
+1. **Validación Implícita (Netmiko Output):** Después de cada acción, la terminal muestra el output exacto del dispositivo (Netmiko).
+2. **Validación de Seguridad (Backend Alerts):** Si el script no puede autenticarse, sufre un timeout, o el hostname es inválido, el frontend muestra una **alerta clara** en la parte superior con el mensaje de error del servidor o del dispositivo, cumpliendo con el requisito de alerta en caso de desviación.
+
+## 6. Control de Versiones (Requisito 8)
+
+El proyecto se gestiona mediante Git. El historial de commits refleja un uso amplio de la herramienta, aunque se debe mejorar el como y cuando se hacen para que sean más utiles. 
+
+<img width="1831" height="1111" alt="image" src="https://github.com/user-attachments/assets/51904968-5e01-4ac2-a070-ddcf714c3e3d" />
+
+"""
